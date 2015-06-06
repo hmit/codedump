@@ -33,24 +33,22 @@ public:
       return ss.str();
     NList digits;
     while ( remain != 0 and !hashMap.count( remain ) ) {
-      remain *= 10;
       hashMap[ remain ] = true;
-      digits.push_back( -1 * remain );
-      cout << "remain " << remain << endl;
-
-      while ( remain < den ) {
-	digits.push_back( 0 );
-	remain *= 10;
+      if ( remain > den ) {
+	digits.push_back( remain / den );
+	remain = remain % den;
       }
-      digits.push_back( remain / den );
-      remain = ( remain % den );
+      else
+	digits.push_back( 0 );
+      remain *= 10;
     }
+
     cout << "here" << endl;
     ss << ".";
     bool close = false;
     for (  NListIt it = digits.begin(); it != digits.end(); it++ ) {
       cout << "here" << *it << endl;
-      if ( remain != 0 and *it == -1 * remain ) {
+      if ( remain != 0 and hashMap.count( *it ) ) {
 	ss << "(";
 	close = true;
       }
