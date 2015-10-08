@@ -71,27 +71,46 @@ class MyCookiePolicy(cookielib.DefaultCookiePolicy):
             return False
 
 
-jar = cookielib.FileCookieJar()
-opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(jar))
-response = opener.open("https://www.sfreconline.org/Activities/ActivitiesAdvSearch.asp")
-response1 = opener.open("https://www.sfreconline.org/Activities/ActivitiesAdvSearch.asp?SectionId=12&BasicSearch=True&_=1444160881853&ajax=true")
-base_url = "https://www.sfreconline.org/Activities/ActivitiesDetails.asp?" #AdvPage=true&ProcessWait=N&aid=659&ComplexId=0&sEcho=1&iColumns=8&sColumns=&iDisplayStart=0&iDisplayLength=10&ajax=true"
-# opener.addheaders.append(('Cookie',
-parser = SFRecHTMLParser()
-html = response1.read()
-parser.feed(html)
+def base_parser(opener):
+    response = opener.open("https://www.sfreconline.org/Activities/ActivitiesAdvSearch.asp")
+    response1 = opener.open("https://www.sfreconline.org/Activities/ActivitiesAdvSearch.asp?SectionId=12&SubSectionId=54&BasicSearch=True&_=1444160881853&ajax=true")
+    base_url = "https://www.sfreconline.org/Activities/ActivitiesDetails.asp?" #AdvPage=true&ProcessWait=N&aid=659&ComplexId=0&sEcho=1&iColumns=8&sColumns=&iDisplayStart=0&iDisplayLength=10&ajax=true"
+    # opener.addheaders.append(('Cookie',
+    parser = SFRecHTMLParser()
+    html = response1.read()
+    parser.feed(html)
 
-reqs = parser.get_more_requests()
-pprint.pprint(reqs)
-isdone = False
-import code; code.interact(local=locals())
-for (k, v) in reqs.iteritems():
-    if isdone: break
-    isdone = True
-    suffix = v.split('(')[1].split(',')[0].split("?")[-1][:-1]
-    url = base_url + suffix + "ajax=True"
-    resp = opener.open(url)
-    print resp.read()
+    return parser.get_more_requests()
 
+class SFRecXMLParser(HTMLParser):
+    def handle_starttag(self, tag, attrs):
+        print tag, attrs
 
+    def handle_endtag(self, tag):
+        print tag
+
+    def handle_data(self, data):
+        print data
+
+def main():
+    jar = cookielib.FileCookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(jar))
+    reqs = base_parser(opener)
+
+    pprint.pprint(reqs)
+    isdone = False
+    # import code; code.interact(local=locals())
+
+    for (k, v) in reqs.iteritems():
+        if isdone: break
+        isdone = True
+        suffix = v.split('(')[1].split(',')[0].split("?")[-1][:-1]
+        url = base_url + suffix + "ajax=True"
+        resp = opener.open(url)
+        print resp.read()
     #https://www.sfreconline.org/Activities/ActivitiesDetails.asp?AdvPage=true&ProcessWait=N&aid=668&ComplexId=0&sEcho=1&iColumns=8&sColumns=&iDisplayStart=0&iDisplayLength=10&ajax=true
+
+def page_test():
+    data = open('response.txt', 'r').read()
+    parser = SFRecXMLParser()
+    parser.feed(data)
